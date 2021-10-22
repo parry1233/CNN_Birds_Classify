@@ -160,11 +160,11 @@ if __name__ == '__main__':
     config.gpu_options.allow_growth = True
     session = InteractiveSession(config=config)
 
-    #trainX,trainY,trainCategoryList = trainData()
-    #testX,testY,testCategoryList = testData()
-    #print('TrainX:',trainX.shape,'TrainY:',trainY.shape)
-    #print('TestX:',testX.shape,'TestY:',testY.shape)
-    #model_train(trainX,trainY,trainCategoryList,testX,testY)
+    trainX,trainY,trainCategoryList = trainData()
+    testX,testY,testCategoryList = testData()
+    print('TrainX:',trainX.shape,'TrainY:',trainY.shape)
+    print('TestX:',testX.shape,'TestY:',testY.shape)
+    model_train(trainX,trainY,trainCategoryList,testX,testY)
 
     #UseSavedModel()
-    predict_grading()
+    #predict_grading()
