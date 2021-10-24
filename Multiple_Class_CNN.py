@@ -9,7 +9,7 @@ from tensorflow.keras.models import Sequential
 from tensorflow.keras.layers import Dropout, Dense, Flatten, Activation, Conv2D, MaxPooling2D
 
 
-from PIL import Image, ImageDraw
+#from PIL import Image, ImageDraw
 from imutils import paths
 from tensorflow.keras.utils import to_categorical
 
