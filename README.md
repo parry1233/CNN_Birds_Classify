@@ -4,7 +4,7 @@
 ### For Data_PreProcess.py
 ```Bash
 pip install os
-pip install cv2
+pip install opencv-python
 pip install sklearn.preprocessing
 pip install imutils
 pip install random
@@ -15,7 +15,7 @@ pip install numpy
 pip install numpy
 pip install pandas
 pip install os
-pip install cv2
+pip install opencv-python
 pip install matplotlib.pyplot
 pip install tensorflow-gpu=2.4.0
 pip install imutils
