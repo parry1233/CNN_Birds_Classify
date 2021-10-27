@@ -5,7 +5,7 @@ from imutils import paths
 import random
 import numpy as np
 
-trainData_Dir = 'Birds/train'
+trainData_Dir = 'Birds\\train'
 trainData_Path = os.path.join(trainData_Dir)
 
 
@@ -48,11 +48,19 @@ class Data_Category:
 
 '''
 if __name__ == '__main__':
-    trainData_Dir = 'Birds\\train'
-    trainData_Path = os.path.join(trainData_Dir)
+    #trainData_Dir = 'Birds\\train'
+    #trainData_Path = os.path.join(trainData_Dir)
     tmp = Data_Category(trainData_Path)
     print(tmp.create_category())
     #print(tmp.mlb_transform('AFRICAN CROWNED CRANE'))
-    print(tmp.create_Data())
-    '''
+    #print(tmp.create_Data())
+'''
 
+'''
+    [A,B,C]
+A = [1,0,0]
+B = [0,1,0]
+C = [0,0,1]
+300 = [0,0,0,.....,1]
+A = [ 0.98 , 0.02 , 0]
+'''

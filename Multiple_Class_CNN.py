@@ -7,6 +7,7 @@ from tensorflow.compat.v1 import ConfigProto, InteractiveSession
 import tensorflow as tf
 from tensorflow.keras.models import Sequential
 from tensorflow.keras.layers import Dropout, Dense, Flatten, Activation, Conv2D, MaxPooling2D
+from tensorflow.keras.optimizers import Adam, SGD
 
 
 #from PIL import Image, ImageDraw
@@ -51,37 +52,64 @@ def testData():
 
 def model_train(x,y,categories,testX,testY):
     model = Sequential()
-    model.add(Conv2D(32,(3,3),padding='same',input_shape=x.shape[1:])) 
-    #? 過濾器數量filters, 指定卷積大小的高與寬kernel_size, 步長strides(default = 1), padding卷積如何處理邊緣(選項包含 valid 與 same，default = valid), 激活函數activation, 指定輸入層高度input_shape
-    model.add(Activation('relu'))
+
+    #? [Conv2D 參數]: 過濾器數量filters, 指定卷積大小的高與寬kernel_size, 步長strides(default = 1), padding卷積如何處理邊緣(選項包含 valid 與 same，default = valid), 激活函數activation, 指定輸入層高度input_shape
+    #? [MaxPooling2d 參數]: 最大池化的窗口大小pool_size(為整數，沿垂直、水平方向縮小比例的因數，若只有一個整數時代表兩個維度都會使用同樣的比例)
+
+    model.add(Conv2D(32,(3,3),padding='same',activation='relu',input_shape=x.shape[1:]))
     model.add(MaxPooling2D(pool_size=(2,2)))
-    #? 最大池化的窗口大小pool_size(為整數，沿垂直、水平方向縮小比例的因數，若只有一個整數時代表兩個維度都會使用同樣的比例)
-    model.add(Conv2D(64,(3,3),padding='same'))
-    model.add(Activation('relu'))
+    model.add(Dropout(0.2))
+
+    model.add(Conv2D(64,(3,3),padding='same',activation='relu'))
     model.add(MaxPooling2D(pool_size=(2,2)))
-    model.add(Dropout(0.25))
-    model.add(Conv2D(128,(3,3),padding='same'))
-    model.add(Activation('relu'))
+    model.add(Dropout(0.2))
+
+    model.add(Conv2D(128,(3,3),padding='same',activation='relu'))
     model.add(MaxPooling2D(pool_size=(2,2)))
-    model.add(Conv2D(128,(3,3),padding='same'))
-    model.add(Activation('relu'))
+    model.add(Conv2D(128,(3,3),padding='same',activation='relu'))
     model.add(MaxPooling2D(pool_size=(2,2)))
-    model.add(Dropout(0.25))
+    model.add(Dropout(0.2))
+
     model.add(Flatten())
-    model.add(Dense(300))
-    model.add(Activation('softmax'))
 
-    model.compile(optimizer='adam',loss='categorical_crossentropy',metrics=['accuracy'])
-    model.fit(x,y,epochs=75,batch_size=32,validation_data=(testX, testY))
+    model.add(Dense(1024,activation='relu'))
+    model.add(Dropout(0.5))
+    model.add(Dense(512,activation='relu'))
+    model.add(Dense(300,activation='softmax'))
 
-    model.save('saved_model/MultiClass_CNN')
+    model.compile(optimizer='SGD',loss='categorical_crossentropy',metrics=['accuracy'])
+    history = model.fit(x,y,epochs=100,batch_size=32,validation_data=(testX, testY))
+
+    model.save('saved_model/MultiClass_CNN_SGD100')
+
+    #? plot the accuracy
+    plt.plot(history.history['accuracy'])
+    plt.plot(history.history['val_accuracy'])
+    plt.title('Model accuracy')
+    plt.ylabel('Accuracy')
+    plt.xlabel('Epoch')
+    plt.legend(['Train', 'Test'], loc='upper left')
+    plt.show()
+
+    #? plot the loss
+    plt.plot(history.history['loss'])
+    plt.plot(history.history['val_loss'])
+    plt.title('Model loss')
+    plt.ylabel('Loss')
+    plt.xlabel('Epoch')
+    plt.legend(['Train', 'Test'], loc='upper left')
+    plt.show()
 
 def UseSavedModel():
+    '''
+    #? output csv file (contains label, predict label, probability) using Test Images predict
+    '''
     testData_Dir = 'Birds\\test'
     testData_Path = os.path.join(testData_Dir)
     test_DPP = DPP.Data_Category(testData_Path)
     categories = test_DPP.create_category()
-    model = tf.keras.models.load_model('saved_model/MultiClass_CNN')
+    model_name = 'MultiClass_CNN_SGD100'
+    model = tf.keras.models.load_model('saved_model\\'+model_name)
 
     x_test = []
     id_line = []
@@ -111,14 +139,18 @@ def UseSavedModel():
     print('len of predic_value:',len(predict_value),'predict_value[0]:',predict_value[0])
     df = pd.DataFrame({'id':id_line,'predict value':predict_value,'Probability':prob})
     df.to_csv('hw1_prediction.csv',index = False)
+    print(model.summary())
 
 def predict_grading():
+    '''
+    #? output csv file (file name, predict label) using grading Images predict
+    '''
     testData_Dir = 'Birds\\test'
     testData_Path = os.path.join(testData_Dir)
     test_DPP = DPP.Data_Category(testData_Path)
     categories = test_DPP.create_category()
 
-    model = tf.keras.models.load_model('saved_model/MultiClass_CNN')
+    model = tf.keras.models.load_model('saved_model/MultiClass_CNN_SGD100')
 
     x_grade = []
     id_line = []
@@ -146,12 +178,24 @@ def predict_grading():
     print('len of prob:',len(prob),'prob[0]:',prob[0])
     predict_value = [categories[np.argmax(p)] for p in predictions]
     print('len of predic_value:',len(predict_value),'predict_value[0]:',predict_value[0])
+    
+    outputDict = {}
+    for i in range(len(id_line)):
+        outputDict[id_line[i]] = predict_value[i]
+    #print(outputDict)
+
+    dfOut = pd.read_csv('grading_pred.csv')
+    for i in range(len(id_line)):
+        fileName = dfOut.loc[i,'image']
+        dfOut.loc[i,'specie'] = outputDict[fileName]
+    dfOut.to_csv('grading_pred.csv',index = False)
+
     '''
     Excel split number string from file name, then convert string to value:
     #? =VALUE(LEFT(A1, SEARCH(".",A1,1)-1))
     '''
-    df = pd.DataFrame({'image':id_line,'species':predict_value})
-    df.to_csv('grading_pred.csv',index = False)
+    #df = pd.DataFrame({'image':id_line,'specie':predict_value})
+    #df.to_csv('grading_pred.csv',index = False)
 
 if __name__ == '__main__':
 
@@ -167,4 +211,4 @@ if __name__ == '__main__':
     model_train(trainX,trainY,trainCategoryList,testX,testY)
 
     #UseSavedModel()
-    #predict_grading()
+    predict_grading()
